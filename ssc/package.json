@@ -1,0 +1,12 @@
+{
+  "name": "ssc-rust",
+  "version": "0.1.0",
+  "files": [
+    "ssc_rust_bg.wasm",
+    "ssc_rust.js",
+    "ssc_rust.d.ts"
+  ],
+  "module": "ssc_rust.js",
+  "types": "ssc_rust.d.ts",
+  "sideEffects": false
+}

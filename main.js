@@ -37,7 +37,7 @@ class StdinToStdoutProcessor {
             this.stderr_buf += String.fromCharCode(code);
         }
     }
-    
+
     constructor(creatorFunc, resolve, reject) {
         this.input_str_pos = 0;
         this.input_str = "";
@@ -54,6 +54,7 @@ class StdinToStdoutProcessor {
 
                 function stdout(c) {
                     window.stdout__(c);
+                    // window.process_result(c);
                 }
 
                 function stderr(c) {
@@ -90,9 +91,9 @@ class StdinToStdoutProcessor {
 
         window.stdout__ = this.stdout.bind(this);
         window.stderr__ = this.stderr.bind(this);
-        
+
         let status = this.limboole(1, [""], satcheck, input, input.length);
-        
+
         if(this.stdout_buf != "") {
             this.print_line_stdout(this.stdout_buf);
             this.stdout_buf = "";
@@ -140,7 +141,8 @@ function run_wrapper(wrapper) {
     window.stdout_textarea.value = "";
     window.stderr_textarea.value = "";
 
-    wrapper.run.bind(wrapper)(window.input_textarea.value, function(line) { writeln(window.stdout_textarea, line); }, function(line) { writeln(window.stderr_textarea, line); } );
+    // wrapper.run.bind(wrapper)(window.input_textarea.value, function(line) { writeln(window.stdout_textarea, line); }, function(line) { writeln(window.stderr_textarea, line); } );
+    wrapper.run.bind(wrapper)(localStorage.getItem("formula"), function(line) { writeln(window.stdout_textarea, line); }, function(line) { writeln(window.stderr_textarea, line); } );
 }
 
 window.LimbooleLoadedPromise = new Promise(function(resolve, reject) {
@@ -161,47 +163,49 @@ window.Wrappers = [
     new ProcessorWrapper(window.Processors[0], "QBF Satisfiability Check", 3)
 ];
 
-let selector = document.getElementById("select_wrapper");
-for(let i = 0; i < window.Wrappers.length; ++i) {
-    let proc = window.Wrappers[i];
-    let o = document.createElement('option');
-    o.appendChild(document.createTextNode(proc.name));
-    o.value = i;
-    selector.appendChild(o);
-}
+// let selector = document.getElementById("select_wrapper");
+// for(let i = 0; i < window.Wrappers.length; ++i) {
+//     let proc = window.Wrappers[i];
+//     let o = document.createElement('option');
+//     o.appendChild(document.createTextNode(proc.name));
+//     o.value = i;
+//     selector.appendChild(o);
+// }
 
-function stateToLocationHash() {
-    let selector = document.getElementById("select_wrapper");
-    let input = document.getElementById("input");
-    return encodeURIComponent(selector.options.selectedIndex + input.value);
-}
+// function stateToLocationHash() {
+//     let selector = document.getElementById("select_wrapper");
+//     let input = document.getElementById("input");
+//     return encodeURIComponent(selector.options.selectedIndex + input.value);
+// }
 
-function applyFromLocationHash() {
-    if(window.location.hash != "" && window.location.hash != undefined && window.location.hash != null) {
-        let selector = document.getElementById("select_wrapper");
-        let input = document.getElementById("input");
-
-        let h = decodeURIComponent(window.location.hash);
-
-        let v = h.charAt(1);
-        if(v > 2) { v = 2; }
-        selector.value = v;
-        input.value = h.substring(2);
-
-        input.style.height = 'auto';
-        input.style.height = (input.scrollHeight) + 'px';
-
-        window.LimbooleLoadedPromise.then(function() {
-            window.run_();
-        });
-    }
-}
+// function applyFromLocationHash() {
+//     if(window.location.hash != "" && window.location.hash != undefined && window.location.hash != null) {
+//         let selector = document.getElementById("select_wrapper");
+//         let input = document.getElementById("input");
+//
+//         let h = decodeURIComponent(window.location.hash);
+//
+//         let v = h.charAt(1);
+//         if(v > 2) { v = 2; }
+//         selector.value = v;
+//         input.value = h.substring(2);
+//
+//         input.style.height = 'auto';
+//         input.style.height = (input.scrollHeight) + 'px';
+//
+//         window.LimbooleLoadedPromise.then(function() {
+//             window.run_();
+//         });
+//     }
+// }
 
 window.run_ = function() {
     let selector = document.getElementById("select_wrapper");
-    let wr = window.Wrappers[selector.options.selectedIndex];
+    // let wr = window.Wrappers[selector.options.selectedIndex];
+    let wr = window.Wrappers[1];
     run_wrapper(wr);
-    window.location.hash = stateToLocationHash();
+    setTimeout(() => {  window.notify_done(); }, 2000);
+    // window.location.hash = stateToLocationHash();
 };
 
 document.getElementById("input").onkeydown = function(e) {
@@ -222,40 +226,40 @@ document.getElementById("input").onkeydown = function(e) {
 let inputDiv = document.getElementById("input");
 let inputDivHeaderStatus = document.getElementById("input_annotation");
 
-// File Reader taken from https://stackoverflow.com/a/11313902
-if (typeof window.FileReader === 'undefined') {
-    // No registering, as file reading is not possible!
-} else {
-    inputDivHeaderStatus.classList.remove("hide");
-    inputDivHeaderStatus.innerHTML = 'Drag&Drop ✓';
-
-    inputDiv.ondragover = function() {
-        this.classList.add('hover');
-        return false;
-    };
-    var endevcb = function() {
-        this.classList.remove('hover');
-        return false;
-    }
-    inputDiv.ondragend = endevcb;
-    inputDiv.onmouseleave = endevcb;
-
-    inputDiv.ondrop = function(e) {
-        this.classList.remove('hover');
-        e.preventDefault();
-
-        var file = e.dataTransfer.files[0],
-            reader = new FileReader();
-        reader.onload = function(event) {
-            inputDiv.value = event.target.result;
-            $(inputDiv).trigger('change');
-            window.run_();
-        };
-        reader.readAsText(file);
-
-        return false;
-    };
-}
+// // File Reader taken from https://stackoverflow.com/a/11313902
+// if (typeof window.FileReader === 'undefined') {
+//     // No registering, as file reading is not possible!
+// } else {
+//     inputDivHeaderStatus.classList.remove("hide");
+//     inputDivHeaderStatus.innerHTML = 'Drag&Drop ✓';
+//
+//     inputDiv.ondragover = function() {
+//         this.classList.add('hover');
+//         return false;
+//     };
+//     var endevcb = function() {
+//         this.classList.remove('hover');
+//         return false;
+//     }
+//     inputDiv.ondragend = endevcb;
+//     inputDiv.onmouseleave = endevcb;
+//
+//     inputDiv.ondrop = function(e) {
+//         this.classList.remove('hover');
+//         e.preventDefault();
+//
+//         var file = e.dataTransfer.files[0],
+//             reader = new FileReader();
+//         reader.onload = function(event) {
+//             inputDiv.value = event.target.result;
+//             $(inputDiv).trigger('change');
+//             window.run_();
+//         };
+//         reader.readAsText(file);
+//
+//         return false;
+//     };
+// }
 
 $('textarea').each(function () {
     this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
@@ -266,4 +270,4 @@ $('textarea').each(function () {
 
 
 
-applyFromLocationHash();
+// applyFromLocationHash();
