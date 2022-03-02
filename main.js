@@ -128,7 +128,7 @@ class ProcessorWrapper {
 
 function run_wrapper(wrapper) {
     window.input_textarea = document.getElementById("input");
-    window.stdout_textarea = document.getElementById("stdout");
+    window.stdout_textarea = document.getElementById("tempfield");
     window.stderr_textarea = document.getElementById("stderr");
 
     function writeln(element, line) {
@@ -200,11 +200,11 @@ window.Wrappers = [
 // }
 
 window.run_ = function() {
+    // document.getElementById("stdout").value = "";
     let selector = document.getElementById("select_wrapper");
     // let wr = window.Wrappers[selector.options.selectedIndex];
     let wr = window.Wrappers[1];
     run_wrapper(wr);
-    setTimeout(() => {  window.notify_done(); }, 2000);
     // window.location.hash = stateToLocationHash();
 };
 

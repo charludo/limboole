@@ -99,12 +99,15 @@ export function compile(description) {
 }
 
 /**
-* @param {string} result
+* @param {string} r
+* @param {number} i
+* @returns {boolean}
 */
-export function interpret(result) {
-    var ptr0 = passStringToWasm0(result, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+export function interpret(r, i) {
+    var ptr0 = passStringToWasm0(r, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     var len0 = WASM_VECTOR_LEN;
-    wasm.interpret(ptr0, len0);
+    var ret = wasm.interpret(ptr0, len0, i);
+    return ret !== 0;
 }
 
 async function load(module, imports) {
@@ -147,6 +150,13 @@ async function init(input) {
     imports.wbg.__wbg_display_e7080257aa37b6a9 = function(arg0, arg1) {
         try {
             display(getStringFromWasm0(arg0, arg1));
+        } finally {
+            wasm.__wbindgen_free(arg0, arg1);
+        }
+    };
+    imports.wbg.__wbg_appendprefills_c4854132e93dd6a9 = function(arg0, arg1) {
+        try {
+            append_prefills(getStringFromWasm0(arg0, arg1));
         } finally {
             wasm.__wbindgen_free(arg0, arg1);
         }

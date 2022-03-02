@@ -6,16 +6,18 @@
 */
 export function compile(description: string): string;
 /**
-* @param {string} result
+* @param {string} r
+* @param {number} i
+* @returns {boolean}
 */
-export function interpret(result: string): void;
+export function interpret(r: string, i: number): boolean;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly compile: (a: number, b: number, c: number) => void;
-  readonly interpret: (a: number, b: number) => void;
+  readonly interpret: (a: number, b: number, c: number) => number;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;

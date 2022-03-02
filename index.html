@@ -13,7 +13,7 @@
                 box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
             }
             .js-auto-size{
-                min-height: 20em;
+                min-height: 25em;
                 font-family: monospace;
                 font-size: 14px;
             }
@@ -26,11 +26,14 @@
                 <h1 style="padding-top: 1em;">Sudoku Sat Compiler</h1>
                 <form style="height: 3em; padding:3em 0;">
                     <div class="row">
-                        <div class="col">
+                        <div class="col-md-9">
                             <div class="progress" id="loading-indicator" style="height: 3em;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Loading and Processing WebAssembly of Limboole and ssc...</div>
                             </div>
-                            <button tabindex="0" type="button" class="btn btn-primary btn-block invisible" onclick="window.to_sat();" id="run-btn">Run</button>
+                            <button tabindex="0" type="button" class="btn btn-primary btn-block invisible" onclick="init_limboole();" id="run-btn">Run</button>
+                        </div>
+                        <div class="col-md-3">
+                            <button tabindex="0" type="button" class="btn btn-danger btn-block" onclick="stop();" id="run-btn">Cancel</button>
                         </div>
                     </div>
                 </form>
@@ -51,6 +54,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="row" style="padding-top: 3em; display: none">
+                    <div class="col">
+                        <h2>Limboole</h2>
+                        <textarea tabindex="2" class="form-control js-auto-size" id="tempfield"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button tabindex="0" type="button" class="btn btn-dark btn-block" onclick="reset();" id="run-btn" style="margin: 3em 0">Reset</button>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -60,20 +74,36 @@
         <script src="main.js"></script>
 
         <script>
-         $("#input").focus();
+        $("#input").focus();
 
 
-         window.stdout_textarea = document.getElementById("stdout");
-         function display(line) {
-             console.log(line);
-             window.stdout_textarea.value += line + "\n";
+        textarea = document.getElementById("stdout");
+        function display(line) {
+            // console.log(line);
+            textarea.value += line + "\n";
 
-             window.stdout_textarea.style.height = 'auto';
-             window.stdout_textarea.style.height = (window.stdout_textarea.scrollHeight) + 'px';
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        };
 
-         };
+        function append_prefills(prefills) {
+            const old = localStorage.getItem("formula");
+            localStorage.setItem("formula", old + prefills);
+        }
 
-         // function limboole()
+        function reset() {
+            document.getElementById("input").value = "";
+            document.getElementById("input").style.height = 'auto';
+            document.getElementById("stdout").value = "";
+            document.getElementById("stdout").style.height = 'auto';
+            document.getElementById("tempfield").value = "";
+        }
+
+        function stop() {
+            localStorage.setItem("stop", "true");
+        }
+
+        // function limboole()
         </script>
 
         <script type="module">
@@ -83,19 +113,48 @@
                   console.log("ssc loaded.");
             });
 
-            function to_sat() {
+            function init_limboole() {
+                document.getElementById("stdout").value = "";
+
                 let sat = compile(document.getElementById("input").value);
                 localStorage.setItem("formula", sat);
-                run_();
-            }
-            window.to_sat = to_sat;
 
-            function notify_done() {
-                let result = document.getElementById("stdout").value;
-                document.getElementById("stdout").value = "";
-                interpret(result);
+                window.run_();
+                wait_for_limboole(-1, 0);
+
             }
-            window.notify_done = notify_done;
+            window.init_limboole = init_limboole;
+
+            function go_another_round(output, i) {
+                if (localStorage.getItem("stop") == "true") {
+                    localStorage.setItem("stop", "false");
+                    return;
+                }
+                let satisfiable = interpret(output, i);
+                if (satisfiable) {
+                    i += 1
+                    window.run_();
+                    wait_for_limboole(-1, i);
+                }
+            }
+
+            function wait_for_limboole (prev, i) {
+                const len = document.getElementById('tempfield').value.length;
+
+                const done = (len == prev && prev > 0)? true : false;
+                const next = len > 0? len : prev
+
+                // console.log(done, prev, len, next);
+
+                if (done) {
+                    let result = document.getElementById("tempfield").value;
+                    document.getElementById("tempfield").value = "";
+
+                    go_another_round(result, i);
+                } else {
+                    setTimeout(function() {wait_for_limboole(next, i)}, 100);
+                }
+            }
         </script>
     </body>
 </html>
